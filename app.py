@@ -8,7 +8,8 @@ BASE = os.path.dirname(os.path.abspath(__file__))
 DB = os.path.join(BASE, "campus.db")
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
-CORS(app)
+app.url_map.strict_slashes = False
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 TABLES = {
     "students": ["student_no", "name", "email", "program", "year"],
@@ -137,11 +138,17 @@ def announcements_page():
 
 
 # ---------- API ----------
+@app.route("/health")
+@app.route("/api/health")
+def health():
+    return jsonify(status="ok", service="Campus Connect API")
+
+
 @app.route("/api")
 def api_root():
     return jsonify({
         "name": "Campus Connect API",
-        "endpoints": ["/api/students", "/api/courses", "/api/enrollments",
+        "endpoints": ["/api/health", "/api/students", "/api/courses", "/api/enrollments",
                       "/api/announcements", "/api/stats"],
     })
 
@@ -258,4 +265,4 @@ def enrollments_delete(item_id):
 init_db()
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=False)
